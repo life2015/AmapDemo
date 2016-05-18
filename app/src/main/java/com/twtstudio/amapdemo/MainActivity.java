@@ -3,45 +3,50 @@ package com.twtstudio.amapdemo;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.CompoundButton;
+import android.widget.RadioGroup;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
 import com.amap.api.maps2d.AMap;
+import com.amap.api.maps2d.CameraUpdate;
+import com.amap.api.maps2d.CameraUpdateFactory;
+import com.amap.api.maps2d.LocationSource;
 import com.amap.api.maps2d.MapView;
+import com.amap.api.maps2d.model.BitmapDescriptorFactory;
+import com.amap.api.maps2d.model.CameraPosition;
+import com.amap.api.maps2d.model.LatLng;
+import com.amap.api.maps2d.model.MarkerOptions;
 
-public class MainActivity extends AppCompatActivity {
-    public AMapLocationClient mLocationClient;
-    public AMapLocationListener mLocationListener;
+public class MainActivity extends AppCompatActivity implements LocationSource,AMapLocationListener,RadioGroup.OnCheckedChangeListener{
+    public AMapLocationClient mlocationClient;
+    public OnLocationChangedListener mListener;
     public AMapLocationClientOption mLocationOption;
-    MapView mMapView;
+    private MapView mMapView;
+    private AMap aMap;
+    public static final LatLng fistPostion=new LatLng(38.997704,117.315942);
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mMapView= (MapView) findViewById(R.id.amap_view);
         mMapView.onCreate(savedInstanceState);
-        mMapView.getMap().setMapType(AMap.MAP_TYPE_NORMAL);
-        mLocationClient = new AMapLocationClient(getApplicationContext());
-        mLocationOption = new AMapLocationClientOption();
-        mLocationOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
-        mLocationOption.setInterval(2000);
-        mLocationClient.setLocationOption(mLocationOption);
-        mLocationClient.setLocationListener(new AMapLocationListener() {
-            @Override
-            public void onLocationChanged(AMapLocation aMapLocation) {
-                if (aMapLocation != null) {
-                    System.out.println(aMapLocation.getLatitude());
-                    System.out.println(aMapLocation.getLongitude());
-                } else {
-                    Log.e("AmapError", "location Error, ErrCode:"
-                            + aMapLocation.getErrorCode() + ", errInfo:"
-                            + aMapLocation.getErrorInfo());
-                }
-            }
-        });
-        mLocationClient.startLocation();
+
+        assert (aMap==null);
+        aMap=mMapView.getMap();
+        aMap.setLocationSource(this);
+        aMap.getUiSettings().setMyLocationButtonEnabled(true);
+        aMap.setMyLocationEnabled(true);
+        aMap.getCameraPosition();
+        aMap.addMarker(new MarkerOptions().position(fistPostion)
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+        //aMap.animateCamera(CameraUpdateFactory.zoomIn(),1000000000,null);
+        changeCamera(
+                CameraUpdateFactory.newCameraPosition(new CameraPosition(
+                        fistPostion, 18, 30, 0)), null);
+
     }
     @Override
     protected void onDestroy() {
@@ -68,4 +73,62 @@ public class MainActivity extends AppCompatActivity {
         mMapView.onSaveInstanceState(outState);
     }
 
+    @Override
+    public void onLocationChanged(AMapLocation aMapLocation) {
+        if (mListener!=null&&aMapLocation!=null)
+        {
+            if (aMapLocation.getErrorCode()==0)
+            {
+                System.out.println(aMapLocation.getLatitude());
+                mListener.onLocationChanged(aMapLocation);
+            }else {
+                Log.d("jcy","定位失败"+aMapLocation.getErrorCode());
+            }
+        }else {
+            Log.d("jcy","初始化问题");
+        }
+    }
+
+    @Override
+    public void activate(OnLocationChangedListener onLocationChangedListener) {
+        mListener = onLocationChangedListener;
+        if (mlocationClient == null) {
+            mlocationClient = new AMapLocationClient(this);
+            mLocationOption = new AMapLocationClientOption();
+            //设置定位监听
+            mlocationClient.setLocationListener(this);
+            //设置为高精度定位模式
+            mLocationOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
+            //设置定位参数
+            mlocationClient.setLocationOption(mLocationOption);
+            // 此方法为每隔固定时间会发起一次定位请求，为了减少电量消耗或网络流量消耗，
+            // 注意设置合适的定位时间的间隔（最小间隔支持为2000ms），并且在合适时间调用stopLocation()方法来取消定位请求
+            // 在定位结束后，在合适的生命周期调用onDestroy()方法
+            // 在单次定位情况下，定位无论成功与否，都无需调用stopLocation()方法移除请求，定位sdk内部会移除
+            mlocationClient.startLocation();
+        }
+    }
+
+    @Override
+    public void deactivate() {
+        mListener = null;
+        if (mlocationClient != null) {
+            mlocationClient.stopLocation();
+            mlocationClient.onDestroy();
+        }
+        mlocationClient = null;
+    }
+
+    @Override
+    public void onCheckedChanged(RadioGroup group, int checkedId) {
+
+    }
+    /**
+     * 根据动画按钮状态，调用函数animateCamera或moveCamera来改变可视区域
+     */
+    private void changeCamera(CameraUpdate update, AMap.CancelableCallback callback) {
+
+            aMap.animateCamera(update, 1000, callback);
+
+    }
 }
