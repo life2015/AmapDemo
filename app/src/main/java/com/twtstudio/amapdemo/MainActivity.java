@@ -1,10 +1,13 @@
 package com.twtstudio.amapdemo;
 
+import android.graphics.BitmapFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -18,30 +21,53 @@ import com.amap.api.maps2d.MapView;
 import com.amap.api.maps2d.model.BitmapDescriptorFactory;
 import com.amap.api.maps2d.model.CameraPosition;
 import com.amap.api.maps2d.model.LatLng;
+import com.amap.api.maps2d.model.Marker;
 import com.amap.api.maps2d.model.MarkerOptions;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
-public class MainActivity extends AppCompatActivity implements LocationSource,AMapLocationListener,RadioGroup.OnCheckedChangeListener{
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
+import static com.twtstudio.amapdemo.LaLngData.*;
+
+public class MainActivity extends AppCompatActivity implements AMap.OnMarkerClickListener,LocationSource,AMapLocationListener,RadioGroup.OnCheckedChangeListener{
     public AMapLocationClient mlocationClient;
     public OnLocationChangedListener mListener;
     public AMapLocationClientOption mLocationOption;
-    private MapView mMapView;
     private AMap aMap;
-    public static final LatLng fistPostion=new LatLng(38.997704,117.315942);
+
+    @BindView(R.id.amap_view)
+     MapView mMapView;
+    @BindView(R.id.sliding_layout)
+     SlidingUpPanelLayout slidingUpPanelLayout;
+    @BindView(R.id.icon_slided)
+    ImageView imageView;
+    @BindView(R.id.content_slide)
+    TextView textView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mMapView= (MapView) findViewById(R.id.amap_view);
+        ButterKnife.bind(this);
         mMapView.onCreate(savedInstanceState);
-
+        //slidingUpPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.HIDDEN);
         assert (aMap==null);
         aMap=mMapView.getMap();
         aMap.setLocationSource(this);
         aMap.getUiSettings().setMyLocationButtonEnabled(true);
         aMap.setMyLocationEnabled(true);
+        aMap.setOnMapClickListener(new AMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                slidingUpPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.HIDDEN);
+            }
+        });
         aMap.getCameraPosition();
-        aMap.addMarker(new MarkerOptions().position(fistPostion)
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+        Marker marker1=aMap.addMarker(new MarkerOptions().position(fistPostion)
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.map_marker_selected)));
+        marker1.setTitle("A1");
+        aMap.setOnMarkerClickListener(this);
         //aMap.animateCamera(CameraUpdateFactory.zoomIn(),1000000000,null);
         changeCamera(
                 CameraUpdateFactory.newCameraPosition(new CameraPosition(
@@ -129,6 +155,18 @@ public class MainActivity extends AppCompatActivity implements LocationSource,AM
     private void changeCamera(CameraUpdate update, AMap.CancelableCallback callback) {
 
             aMap.animateCamera(update, 1000, callback);
+
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+
+        slidingUpPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+        slidingUpPanelLayout.setTouchEnabled(false);
+        imageView.setImageResource(R.drawable.ic_session);
+        textView.setText("剩余车辆 5 车位 17");
+            Log.d("jcy","xians");
+        return true;
 
     }
 }
