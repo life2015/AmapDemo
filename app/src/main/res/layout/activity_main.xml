@@ -6,29 +6,43 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="bottom"
-    sothree:umanoPanelHeight="40dp"
+    sothree:umanoPanelHeight="60dp"
     sothree:umanoShadowHeight="4dp"
     sothree:umanoFadeColor="@android:color/transparent"
+    sothree:umanoOverlay="true"
     sothree:umanoInitialState="hidden">
-
-
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
     <com.amap.api.maps2d.MapView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/amap_view"/>
-
+        android:id="@+id/amap_view"
+        android:fitsSystemWindows="false"/>
+    </FrameLayout>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@color/background"
         android:orientation="horizontal">
         <ImageView
             android:id="@+id/icon_slided"
             android:layout_width="wrap_content"
             android:layout_height="40dp" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="46楼A1停车场"/>
         <TextView
             android:id="@+id/content_slide"
+            android:paddingTop="5dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"/>
+        </LinearLayout>
     </LinearLayout>
 </com.sothree.slidinguppanel.SlidingUpPanelLayout>

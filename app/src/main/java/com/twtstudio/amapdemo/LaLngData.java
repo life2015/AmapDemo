@@ -8,4 +8,5 @@ import com.amap.api.maps2d.model.LatLng;
 
 public class LaLngData {
     public static final LatLng fistPostion=new LatLng(38.997704,117.315942);
+
 }
